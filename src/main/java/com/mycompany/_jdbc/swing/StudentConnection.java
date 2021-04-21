@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,21 +20,22 @@ import java.util.logging.Logger;
 public class StudentConnection implements IStudentConnection {
 
     @Override
-    public ArrayList<Student> getAllStudent(Integer skip, Integer limit) {
-        ArrayList<Student> list = new ArrayList<>();
+    public Vector<Student> getAllStudent(Integer skip, Integer limit) {
+        Vector<Student> list = new Vector<>();
         try {
             Statement st = ConnectionUtils.getConnect().createStatement();
             String strsql = "SELECT * FROM Student";
             ResultSet rs = st.executeQuery(strsql);
             while (rs.next()) {
-                int iID = rs.getInt("MSH");
-                String strName = rs.getString(2);
-                String strDesc = rs.getString(3);
-
-                System.out.println("ID: " + iID + " - Name: " + strName + " - Desc: " + strDesc);
-
+                Student std = new Student();
+                std.MSH = rs.getInt("MHS");
+                std.TenHS = rs.getString(2);
+                std.Diem = rs.getDouble("Diem");
+                std.HinhAnh = rs.getString(4);
+                std.DiaChi = rs.getString(5);
+                std.GhiChu = rs.getString(6);
+                list.add(std);
             }
-
         } catch (SQLException ex) {
             Logger.getLogger(StudentConnection.class.getName()).log(Level.SEVERE, null, ex);
         }

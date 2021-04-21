@@ -5,7 +5,7 @@
  */
 package com.mycompany._jdbc.swing;
 
-import java.util.ArrayList;
+import java.util.Vector;
 
 /**
  *
@@ -19,5 +19,5 @@ public interface IStudentConnection {
      * @param limit
      * @return
      */
-    ArrayList<Student> getAllStudent(Integer skip, Integer limit);
+    Vector<Student> getAllStudent(Integer skip, Integer limit);
 }
