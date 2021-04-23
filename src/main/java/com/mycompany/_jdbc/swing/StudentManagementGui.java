@@ -7,12 +7,21 @@ package com.mycompany._jdbc.swing;
 
 import java.awt.BorderLayout;
 import java.awt.List;
+import java.awt.event.MouseAdapter;
+import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -25,7 +34,20 @@ public class StudentManagementGui {
         JFrame frame = new JFrame("Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
-        frame.add(new TableStudent());
+        TableStudent tStd = new TableStudent();
+        tStd.table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int row = tStd.table.rowAtPoint(evt.getPoint());
+                if (row >= 0) {
+                    for (int c = 0; c < tStd.table.getColumnCount(); c++) {
+                        System.out.println(tStd.table.getModel().getValueAt(row, c));
+                    }
+                    
+                }
+            }
+        });
+        frame.add(tStd);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
@@ -34,7 +56,7 @@ public class StudentManagementGui {
 
 class TableStudent extends JPanel {
 
-    JTable table;
+    public JTable table;
 
     public TableStudent() {
         Vector<String> columnNames = new Vector<String>();
@@ -99,10 +121,30 @@ class TableStudent extends JPanel {
                 }
             }
         };
-
         table.setModel(tokenmodel);
         JScrollPane scrollPane = new JScrollPane(table);
         table.setFillsViewportHeight(true);
+        table.setAlignmentX(CENTER_ALIGNMENT);
         add(scrollPane);
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setHorizontalAlignment(JLabel.CENTER);
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+        }
+    }
+
+}
+
+class FormStudent extends JPanel {
+
+    JTextField mhs;
+    JTextField name;
+    JTextField score;
+    JTextField avatar;
+    JTextField address;
+    JTextField note;
+
+    public FormStudent() {
+
     }
 }
