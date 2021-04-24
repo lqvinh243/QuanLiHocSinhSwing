@@ -6,12 +6,21 @@
 package com.mycompany._jdbc.swing;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.List;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.util.ArrayList;
 import java.util.Vector;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -28,29 +37,89 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author Admin
  */
-public class StudentManagementGui {
+public class StudentManagementGui implements ActionListener {
+
+    FormStudent frmStudent;
+    ActionStudent actStudent;
+    TableStudent tStd;
 
     public StudentManagementGui() {
         JFrame frame = new JFrame("Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(new BorderLayout());
-        TableStudent tStd = new TableStudent();
+//        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+        //declare jpanel
+        tStd = new TableStudent();
+        frmStudent = new FormStudent();
+        actStudent = new ActionStudent();
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+
         tStd.table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 int row = tStd.table.rowAtPoint(evt.getPoint());
                 if (row >= 0) {
-                    for (int c = 0; c < tStd.table.getColumnCount(); c++) {
-                        System.out.println(tStd.table.getModel().getValueAt(row, c));
-                    }
-                    
+                    Student std = new Student();
+                    std.mhs = Integer.parseInt(tStd.table.getModel().getValueAt(row, 0).toString());
+                    std.name = tStd.table.getModel().getValueAt(row, 1).toString();
+                    std.score = Double.parseDouble(tStd.table.getModel().getValueAt(row, 2).toString());
+                    std.avatar = tStd.table.getModel().getValueAt(row, 3).toString();
+                    std.address = tStd.table.getModel().getValueAt(row, 4).toString();
+                    std.note = tStd.table.getModel().getValueAt(row, 5).toString();
+                    frmStudent.setFormValue(std);
                 }
             }
         });
-        frame.add(tStd);
+
+        actStudent.addStudent.addActionListener(this);
+        actStudent.addStudent.setActionCommand("Add");
+
+        actStudent.editStudent.addActionListener(this);
+        actStudent.editStudent.setActionCommand("Update");
+
+        actStudent.deleteStudent.addActionListener(this);
+        actStudent.deleteStudent.setActionCommand("Delete");
+
+        frame.add(tStd, BorderLayout.NORTH);
+        frame.add(frmStudent, BorderLayout.CENTER);
+        frame.add(actStudent, BorderLayout.EAST);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String str = e.getActionCommand();
+        if (str.equals("Add")) {
+            Student std = frmStudent.getFormStudent();
+            boolean addStatus = StudentConnection.getInstance().addStudent(std);
+            if (addStatus == true) {
+                JOptionPane.showMessageDialog(null, "Add student success!");
+                tStd.ReloadModelTable();
+            } else {
+                JOptionPane.showMessageDialog(null, "Add student fail!");
+            }
+            frmStudent.clearForm();
+        } else if (str.equals("Update")) {
+            Student std = frmStudent.getFormStudent();
+            boolean updateStatus = StudentConnection.getInstance().updateStudent(std);
+            if (updateStatus == true) {
+                JOptionPane.showMessageDialog(null, "Update student success!");
+                tStd.ReloadModelTable();
+            } else {
+                JOptionPane.showMessageDialog(null, "Update student fail!");
+            }
+        } else if (str.equals("Delete")) {
+            boolean deleteStatus = StudentConnection.getInstance().deleteStudent(frmStudent.getIdStudent());
+            if (deleteStatus == true) {
+                JOptionPane.showMessageDialog(null, "Add student success!");
+                tStd.ReloadModelTable();
+            } else {
+                JOptionPane.showMessageDialog(null, "Add student fail!");
+            }
+        }
     }
 }
 
@@ -59,37 +128,45 @@ class TableStudent extends JPanel {
     public JTable table;
 
     public TableStudent() {
-        Vector<String> columnNames = new Vector<String>();
-
-        columnNames.add("Ma hoc sinh");
-        columnNames.add("Ten");
-        columnNames.add("Diem");
-        columnNames.add("Hinh anh");
-        columnNames.add("Dia chi");
-        columnNames.add("Ghi chu");
-
-        String[] columnNames1 = {"Ma hoc sinh", "Ten", "Diem", "Hinh anh", "Dia chi", "Ghi chu"};
-
-        Vector<Student> list = new StudentConnection().getAllStudent(0, 0);
-        Vector<Vector<Student>> l = new Vector<Vector<Student>>();
         table = new JTable();
 
+        table.setModel(getModel());
+        JScrollPane scrollPane = new JScrollPane(table);
+        table.setFillsViewportHeight(true);
+        table.setAlignmentX(CENTER_ALIGNMENT);
+        add(scrollPane);
+        scrollPane.setPreferredSize(new Dimension(1000, 630));
+        this.centerContent();
+
+    }
+
+    public void centerContent() {
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+        renderer.setHorizontalAlignment(JLabel.CENTER);
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+        }
+    }
+
+    public AbstractTableModel getModel() {
+        Vector<Student> list = StudentConnection.getInstance().getAllStudent(0, 0);
+        Vector<Vector<Student>> l = new Vector<Vector<Student>>();
         AbstractTableModel tokenmodel = new AbstractTableModel() {
 
             @Override
             public Object getValueAt(int rowIndex, int columnIndex) {
                 if (columnIndex == 0) {
-                    return (list.get(rowIndex).MSH);
+                    return (list.get(rowIndex).mhs);
                 } else if (columnIndex == 1) {
-                    return (list.get(rowIndex).TenHS);
+                    return (list.get(rowIndex).name);
                 } else if (columnIndex == 2) {
-                    return (list.get(rowIndex).Diem);
+                    return (list.get(rowIndex).score);
                 } else if (columnIndex == 3) {
-                    return (list.get(rowIndex).HinhAnh);
+                    return (list.get(rowIndex).avatar);
                 } else if (columnIndex == 4) {
-                    return (list.get(rowIndex).DiaChi);
+                    return (list.get(rowIndex).address);
                 } else {
-                    return (list.get(rowIndex).GhiChu);
+                    return (list.get(rowIndex).note);
                 }
             }
 
@@ -121,18 +198,13 @@ class TableStudent extends JPanel {
                 }
             }
         };
-        table.setModel(tokenmodel);
-        JScrollPane scrollPane = new JScrollPane(table);
-        table.setFillsViewportHeight(true);
-        table.setAlignmentX(CENTER_ALIGNMENT);
-        add(scrollPane);
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-        renderer.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-        }
+        return tokenmodel;
     }
 
+    public void ReloadModelTable() {
+        table.setModel(this.getModel());
+        this.centerContent();
+    }
 }
 
 class FormStudent extends JPanel {
@@ -143,8 +215,123 @@ class FormStudent extends JPanel {
     JTextField avatar;
     JTextField address;
     JTextField note;
+    private final int top = 3, left = 3, bottom = 3, right = 3;
+    private final Insets i = new Insets(top, left, bottom, right);
+    private final Dimension dtm = new Dimension(200, 24);
 
     public FormStudent() {
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.insets = i;
+        add(new JLabel("Ma"), gbc);
+        gbc.gridx += 2;
+        add(new JLabel("Ten"), gbc);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(new JLabel("Diem"), gbc);
+        gbc.gridx += 2;
+        add(new JLabel("Hinh anh"), gbc);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        add(new JLabel("Dia chi"), gbc);
+        gbc.gridx += 2;
+        add(new JLabel("Ghi chu"), gbc);
+        gbc.gridy = 0;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.5;
+        mhs = new JTextField(5);
+        mhs.setEnabled(false);
+        mhs.setPreferredSize(dtm);
+        add(mhs, gbc);
+        gbc.gridx += 2;
+        name = new JTextField(20);
+        name.setPreferredSize(dtm);
+        add(name, gbc);
+        gbc.gridy++;
+        gbc.gridx = 1;
+        score = new JTextField(10);
+        score.setPreferredSize(dtm);
+        add(score, gbc);
+        gbc.gridx += 2;
+        avatar = new JTextField(20);
+        avatar.setPreferredSize(dtm);
+        add(avatar, gbc);
+        gbc.gridy++;
+        gbc.gridx = 1;
+        address = new JTextField(10);
+        address.setPreferredSize(dtm);
+        add(address, gbc);
+        gbc.gridx += 2;
+        note = new JTextField(20);
+        note.setPreferredSize(dtm);
+        add(note, gbc);
+    }
 
+    public void setFormValue(Student std) {
+        mhs.setText(std.mhs.toString());
+        name.setText(std.name);
+        score.setText(std.score.toString());
+        avatar.setText(std.avatar);
+        address.setText(std.address);
+        note.setText(std.note);
+    }
+
+    public void clearForm() {
+        mhs.setText("");
+        name.setText("");
+        score.setText("");
+        avatar.setText("");
+        address.setText("");
+        note.setText("");
+    }
+
+    public Integer getIdStudent() {
+        return Integer.parseInt(mhs.getText());
+    }
+
+    public Student getFormStudent() {
+        Student std = new Student();
+        if (mhs.getText().length() > 0) {
+            std.mhs = Integer.parseInt(mhs.getText());
+        }
+        std.name = name.getText();
+        std.score = Double.parseDouble(score.getText());
+        std.avatar = avatar.getText();
+        std.address = address.getText();
+        std.note = note.getText();
+
+        return std;
+    }
+}
+
+class ActionStudent extends JPanel {
+
+    JButton addStudent;
+    JButton editStudent;
+    JButton deleteStudent;
+    private int top = 3, left = 3, bottom = 3, right = 3;
+    private Insets i = new Insets(top, left, bottom, right);
+
+    public ActionStudent() {
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = i;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        addStudent = new JButton("Them hoc sinh");
+        add(addStudent, gbc);
+        gbc.gridx++;
+        editStudent = new JButton("Sua hoc sinh");
+        add(editStudent, gbc);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        deleteStudent = new JButton("Xoa hoc sinh");
+        add(deleteStudent, gbc);
     }
 }

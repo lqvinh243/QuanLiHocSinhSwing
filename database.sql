@@ -11,7 +11,7 @@ BEGIN
     CREATE TABLE HocSinh (
         MHS INT PRIMARY KEY IDENTITY (1, 1),
         TenHS VARCHAR(100),
-		Diem DECIMAL,
+		Diem FLOAT,
 		HinhAnh VARCHAR(100),
 		DiaChi VARCHAR(100),
 		GhiChu VARCHAR(100),

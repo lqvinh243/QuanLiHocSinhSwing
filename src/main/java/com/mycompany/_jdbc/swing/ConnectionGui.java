@@ -82,8 +82,6 @@ class Button extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (ConnectionUtils.getConnect() != null) {
-            StudentConnection std = new StudentConnection();
-            std.getAllStudent(0, 0);
             new StudentManagementGui();
             ((Window) getRootPane().getParent()).dispose();
         }

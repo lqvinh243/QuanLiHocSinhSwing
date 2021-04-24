@@ -11,38 +11,35 @@ package com.mycompany._jdbc.swing;
  */
 public class Student {
 
-    Integer MSH;
-    String TenHS;
-    Double Diem;
-    String HinhAnh;
-    String DiaChi;
-    String GhiChu;
+    Integer mhs;
+    String name;
+    Double score;
+    String avatar;
+    String address;
+    String note;
 
     public Student() {
-        this.MSH = 0;
-        this.TenHS = "";
-        this.Diem = 0.0;
-        this.HinhAnh = "";
-        this.DiaChi = "";
-        this.GhiChu = "";
+        this.mhs = 0;
+        this.name = "";
+        this.score = 0.0;
+        this.avatar = "";
+        this.address = "";
+        this.note = "";
     }
 
-    public Student(Integer mhs, String tenHs, Double diem, String hinhAnh, String diaChi, String ghiChu) {
-        this.MSH = mhs;
-        this.TenHS = tenHs;
-        this.Diem = diem;
-        this.HinhAnh = hinhAnh;
-        this.DiaChi = diaChi;
-        this.GhiChu = ghiChu;
+    public Student(Integer mhs, String name, Double score, String avatar, String address, String note) {
+        
+        
+        
     }
 
     public void PrintStudent() {
         System.out.println("Thong tin hoc sinh:");
-        System.out.println("Ma hoc sinh : " + this.MSH);
-        System.out.println("Ten hoc sinh : " + this.TenHS);
-        System.out.println("Diem : " + this.Diem);
-        System.out.println("Hinh anh : " + this.HinhAnh);
-        System.out.println("Dia chi : " + this.DiaChi);
-        System.out.println("Ghi chu : " + this.GhiChu);
+        System.out.println("Ma hoc sinh : " + this.mhs);
+        System.out.println("Ten hoc sinh : " + this.name);
+        System.out.println("Diem : " + this.score);
+        System.out.println("Hinh anh : " + this.avatar);
+        System.out.println("Dia chi : " + this.address);
+        System.out.println("Ghi chu : " + this.note);
     }
 }
