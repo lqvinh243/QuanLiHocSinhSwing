@@ -20,7 +20,12 @@ public interface IStudentConnection {
      * @return
      */
     Vector<Student> getAllStudent(Integer skip, Integer limit);
+
+    Vector<Student> getAllStudent(SortOption sortMHS,SortOption sortScore);
+
     public boolean addStudent(Student std);
+
     public boolean updateStudent(Student std);
+
     public boolean deleteStudent(Integer id);
 }

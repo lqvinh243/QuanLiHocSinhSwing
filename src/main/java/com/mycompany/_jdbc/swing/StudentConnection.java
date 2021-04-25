@@ -33,11 +33,50 @@ public class StudentConnection implements IStudentConnection {
     }
 
     @Override
-    public Vector<Student> getAllStudent(Integer skip, Integer limit) { 
+    public Vector<Student> getAllStudent(Integer skip, Integer limit) {
         Vector<Student> list = new Vector<>();
         try {
             Statement st = ConnectionUtils.getConnect().createStatement();
             String strsql = "SELECT * FROM HocSinh";
+            ResultSet rs = st.executeQuery(strsql);
+            while (rs.next()) {
+                Student std = new Student();
+                std.mhs = rs.getInt("MHS");
+                std.name = rs.getString(2);
+                std.score = rs.getDouble("Diem");
+                std.avatar = rs.getString(4);
+                std.address = rs.getString(5);
+                std.note = rs.getString(6);
+                list.add(std);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(StudentConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
+
+    @Override
+    public Vector<Student> getAllStudent(SortOption sortMHS, SortOption sortScore) {
+        Vector<Student> list = new Vector<>();
+        try {
+            Statement st = ConnectionUtils.getConnect().createStatement();
+            boolean hasOrder = false;
+            String orderBy = " ORDER BY";
+            if (sortMHS.sortType != SortType.NONE) {
+                orderBy += " MHS " + sortMHS.sortType;
+                hasOrder = true;
+            }
+            if (sortScore.sortType != SortType.NONE) {
+                if (hasOrder == true) {
+                    orderBy += " ,";
+                }
+                orderBy += " Diem " + sortScore.sortType;
+                 hasOrder = true;
+            }
+            String strsql = "SELECT * FROM HocSinh";
+            if (hasOrder == true) {
+                strsql += orderBy;
+            }
             ResultSet rs = st.executeQuery(strsql);
             while (rs.next()) {
                 Student std = new Student();
@@ -118,4 +157,5 @@ public class StudentConnection implements IStudentConnection {
         }
         return true;
     }
+
 }

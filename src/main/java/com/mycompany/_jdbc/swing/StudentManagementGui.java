@@ -7,12 +7,16 @@ package com.mycompany._jdbc.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.List;
+import javax.swing.JComboBox;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.util.ArrayList;
 import java.util.Vector;
@@ -25,6 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JViewport;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -42,6 +47,8 @@ public class StudentManagementGui implements ActionListener {
     FormStudent frmStudent;
     ActionStudent actStudent;
     TableStudent tStd;
+    ActionSort actSort;
+    ActionForm actForm;
 
     public StudentManagementGui() {
         JFrame frame = new JFrame("Test");
@@ -51,6 +58,11 @@ public class StudentManagementGui implements ActionListener {
         tStd = new TableStudent();
         frmStudent = new FormStudent();
         actStudent = new ActionStudent();
+        actSort = new ActionSort();
+        actForm = new ActionForm();
+        TopContent top = new TopContent(tStd, actSort);
+        FormContent frmContent = new FormContent(frmStudent, actForm);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -81,8 +93,13 @@ public class StudentManagementGui implements ActionListener {
         actStudent.deleteStudent.addActionListener(this);
         actStudent.deleteStudent.setActionCommand("Delete");
 
-        frame.add(tStd, BorderLayout.NORTH);
-        frame.add(frmStudent, BorderLayout.CENTER);
+        actSort.cbMHS.addActionListener(this);
+        actSort.cbMHS.setActionCommand("SortMHS");
+
+        actSort.cbScore.addActionListener(this);
+        actSort.cbScore.setActionCommand("SortScore");
+        frame.add(top, BorderLayout.NORTH);
+        frame.add(frmContent, BorderLayout.CENTER);
         frame.add(actStudent, BorderLayout.EAST);
         frame.pack();
         frame.setLocationRelativeTo(null);
@@ -92,34 +109,72 @@ public class StudentManagementGui implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         String str = e.getActionCommand();
-        if (str.equals("Add")) {
-            Student std = frmStudent.getFormStudent();
-            boolean addStatus = StudentConnection.getInstance().addStudent(std);
-            if (addStatus == true) {
-                JOptionPane.showMessageDialog(null, "Add student success!");
-                tStd.ReloadModelTable();
-            } else {
-                JOptionPane.showMessageDialog(null, "Add student fail!");
+        TableStudentFilter filter = actSort.filter();
+        switch (str) {
+            case "Add": {
+                Student std = frmStudent.getFormStudent();
+                boolean addStatus = StudentConnection.getInstance().addStudent(std);
+                if (addStatus == true) {
+                    JOptionPane.showMessageDialog(null, "Add student success!");
+                    tStd.ReloadModelTable(filter);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Add student fail!");
+                }
+                frmStudent.clearForm();
+                break;
             }
-            frmStudent.clearForm();
-        } else if (str.equals("Update")) {
-            Student std = frmStudent.getFormStudent();
-            boolean updateStatus = StudentConnection.getInstance().updateStudent(std);
-            if (updateStatus == true) {
-                JOptionPane.showMessageDialog(null, "Update student success!");
-                tStd.ReloadModelTable();
-            } else {
-                JOptionPane.showMessageDialog(null, "Update student fail!");
+            case "Update": {
+                Student std = frmStudent.getFormStudent();
+                boolean updateStatus = StudentConnection.getInstance().updateStudent(std);
+                if (updateStatus == true) {
+                    JOptionPane.showMessageDialog(null, "Update student success!");
+                    tStd.ReloadModelTable(filter);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Update student fail!");
+                }
+                break;
             }
-        } else if (str.equals("Delete")) {
-            boolean deleteStatus = StudentConnection.getInstance().deleteStudent(frmStudent.getIdStudent());
-            if (deleteStatus == true) {
-                JOptionPane.showMessageDialog(null, "Add student success!");
-                tStd.ReloadModelTable();
-            } else {
-                JOptionPane.showMessageDialog(null, "Add student fail!");
-            }
+            case "Delete":
+                boolean deleteStatus = StudentConnection.getInstance().deleteStudent(frmStudent.getIdStudent());
+                if (deleteStatus == true) {
+                    JOptionPane.showMessageDialog(null, "Add student success!");
+                    tStd.ReloadModelTable(filter);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Add student fail!");
+                }
+                break;
+            case "SortMHS":
+            case "SortScore":
+                tStd.ReloadModelTable(filter);
+                break;
+            default:
+                break;
         }
+    }
+}
+
+class TopContent extends JPanel {
+
+    public TopContent(TableStudent tbl, ActionSort act) {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.add(act);
+        this.add(tbl);
+    }
+}
+
+class TableStudentFilter {
+
+    SortOption sortMHS;
+    SortOption sortScore;
+
+    public TableStudentFilter() {
+        sortMHS = new SortOption();
+        sortScore = new SortOption();
+    }
+
+    public TableStudentFilter(SortOption sortMHS, SortOption sortScore) {
+        this.sortMHS = sortMHS;
+        this.sortScore = sortScore;
     }
 }
 
@@ -129,13 +184,11 @@ class TableStudent extends JPanel {
 
     public TableStudent() {
         table = new JTable();
-
-        table.setModel(getModel());
+        TableStudentFilter filter = new TableStudentFilter();
+        table.setModel(getModel(filter));
         JScrollPane scrollPane = new JScrollPane(table);
-        table.setFillsViewportHeight(true);
         table.setAlignmentX(CENTER_ALIGNMENT);
         add(scrollPane);
-        scrollPane.setPreferredSize(new Dimension(1000, 630));
         this.centerContent();
 
     }
@@ -148,25 +201,25 @@ class TableStudent extends JPanel {
         }
     }
 
-    public AbstractTableModel getModel() {
-        Vector<Student> list = StudentConnection.getInstance().getAllStudent(0, 0);
-        Vector<Vector<Student>> l = new Vector<Vector<Student>>();
+    public AbstractTableModel getModel(TableStudentFilter filter) {
+        var list = StudentConnection.getInstance().getAllStudent(filter.sortMHS, filter.sortScore);
         AbstractTableModel tokenmodel = new AbstractTableModel() {
 
             @Override
             public Object getValueAt(int rowIndex, int columnIndex) {
-                if (columnIndex == 0) {
-                    return (list.get(rowIndex).mhs);
-                } else if (columnIndex == 1) {
-                    return (list.get(rowIndex).name);
-                } else if (columnIndex == 2) {
-                    return (list.get(rowIndex).score);
-                } else if (columnIndex == 3) {
-                    return (list.get(rowIndex).avatar);
-                } else if (columnIndex == 4) {
-                    return (list.get(rowIndex).address);
-                } else {
-                    return (list.get(rowIndex).note);
+                switch (columnIndex) {
+                    case 0:
+                        return (list.get(rowIndex).mhs);
+                    case 1:
+                        return (list.get(rowIndex).name);
+                    case 2:
+                        return (list.get(rowIndex).score);
+                    case 3:
+                        return (list.get(rowIndex).avatar);
+                    case 4:
+                        return (list.get(rowIndex).address);
+                    default:
+                        return (list.get(rowIndex).note);
                 }
             }
 
@@ -201,9 +254,32 @@ class TableStudent extends JPanel {
         return tokenmodel;
     }
 
-    public void ReloadModelTable() {
-        table.setModel(this.getModel());
+    public void ReloadModelTable(TableStudentFilter filter) {
+        table.setModel(this.getModel(filter));
         this.centerContent();
+    }
+}
+
+class FormContent extends JPanel {
+
+    public FormContent(FormStudent frm, ActionForm act) {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.add(frm);
+        this.add(act);
+    }
+}
+
+class ActionForm extends JPanel {
+
+    JButton btnConfirm;
+    JButton btnCancel;
+
+    public ActionForm() {
+        setLayout(new FlowLayout(FlowLayout.RIGHT));
+        btnConfirm = new JButton("Confirm");
+        add(btnConfirm);
+        btnCancel = new JButton("Cancel");
+        add(btnCancel);
     }
 }
 
@@ -215,6 +291,7 @@ class FormStudent extends JPanel {
     JTextField avatar;
     JTextField address;
     JTextField note;
+
     private final int top = 3, left = 3, bottom = 3, right = 3;
     private final Insets i = new Insets(top, left, bottom, right);
     private final Dimension dtm = new Dimension(200, 24);
@@ -270,6 +347,7 @@ class FormStudent extends JPanel {
         note = new JTextField(20);
         note.setPreferredSize(dtm);
         add(note, gbc);
+
     }
 
     public void setFormValue(Student std) {
@@ -307,6 +385,22 @@ class FormStudent extends JPanel {
 
         return std;
     }
+
+    public void DisableForm() {
+        name.setEnabled(false);
+        score.setEnabled(false);
+        avatar.setEnabled(false);
+        address.setEnabled(false);
+        note.setEnabled(false);
+    }
+
+    public void EnabledForm() {
+        name.setEnabled(true);
+        score.setEnabled(true);
+        avatar.setEnabled(true);
+        address.setEnabled(true);
+        note.setEnabled(true);
+    }
 }
 
 class ActionStudent extends JPanel {
@@ -333,5 +427,39 @@ class ActionStudent extends JPanel {
         gbc.gridx = 0;
         deleteStudent = new JButton("Xoa hoc sinh");
         add(deleteStudent, gbc);
+    }
+}
+
+class ActionSort extends JPanel {
+
+    JComboBox cbMHS;
+    JComboBox cbScore;
+
+    public ActionSort() {
+        Vector<SortOption> listSortMHS = new Vector<>();
+        listSortMHS.add(new SortOption("Ma hoc sinh", SortType.NONE));
+        listSortMHS.add(new SortOption("Ma hoc sinh: Tang dan", SortType.ASC));
+        listSortMHS.add(new SortOption("Ma hoc sinh: Giam dan", SortType.DESC));
+        cbMHS = new JComboBox(listSortMHS);
+        add(cbMHS);
+
+        Vector<SortOption> listSortScore = new Vector<>();
+        listSortScore.add(new SortOption("Diem", SortType.NONE));
+        listSortScore.add(new SortOption("Diem: Thap den cao", SortType.ASC));
+        listSortScore.add(new SortOption("Diem: Cao den thap", SortType.DESC));
+        cbScore = new JComboBox(listSortScore);
+        add(cbScore);
+    }
+
+    public TableStudentFilter filter() {
+        return new TableStudentFilter((SortOption) this.cbMHS.getSelectedItem(), (SortOption) this.cbScore.getSelectedItem());
+    }
+
+    public SortOption getValueMHS() {
+        return (SortOption) this.cbMHS.getSelectedItem();
+    }
+
+    public SortOption getValueScore() {
+        return (SortOption) this.cbScore.getSelectedItem();
     }
 }
