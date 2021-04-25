@@ -32,6 +32,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  *
  * @author Admin
  */
+@SuppressWarnings("unchecked")
 public class StudentManagementGui implements ActionListener {
 
     FormStudent frmStudent;

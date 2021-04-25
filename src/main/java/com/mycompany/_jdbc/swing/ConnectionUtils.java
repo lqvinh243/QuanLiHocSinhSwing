@@ -5,8 +5,10 @@
  */
 package com.mycompany._jdbc.swing;
 
+import java.awt.HeadlessException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import javax.swing.JOptionPane;
 
 /**
@@ -77,14 +79,11 @@ public final class ConnectionUtils {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             String url = "jdbc:sqlserver://" + _serverName + ":" + _port + ";instance=SQLSERVER;" + "databaseName=" + _databaseName + ";" + "user=" + _username + ";" + "password=" + _password;
-            System.out.println(url);
             _conn = DriverManager.getConnection(url);
-//            _conn = DriverManager.getConnection("jdbc:sqlserver://localhost:1433;databaseName=QuanLyHocSinh;user=sa;password=123");
             if (_conn != null) {
                 JOptionPane.showMessageDialog(null, "Connect success!");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (HeadlessException | ClassNotFoundException | SQLException e) {
              JOptionPane.showMessageDialog(null, "Connect fail!");
         }
         return _conn;

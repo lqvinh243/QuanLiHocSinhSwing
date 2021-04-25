@@ -8,7 +8,6 @@ com\mycompany\_jdbc\swing\ActionSort.class
 com\mycompany\_jdbc\swing\IStudentConnection.class
 com\mycompany\_jdbc\swing\FormStudent.class
 com\mycompany\_jdbc\swing\NamePane$2.class
-com\mycompany\_jdbc\swing\Main$1.class
 com\mycompany\_jdbc\swing\ConnectionUtils.class
 com\mycompany\_jdbc\swing\Student.class
 com\mycompany\_jdbc\swing\NamePane$3.class
