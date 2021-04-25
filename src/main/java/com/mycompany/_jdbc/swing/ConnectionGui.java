@@ -6,19 +6,14 @@
 package com.mycompany._jdbc.swing;
 
 import java.awt.BorderLayout;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.Rectangle;
-import java.awt.TextField;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -82,11 +77,12 @@ class Button extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (ConnectionUtils.getConnect() != null) {
-            new StudentManagementGui();
-            ((Window) getRootPane().getParent()).dispose();
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                var studentManagementGui = new StudentManagementGui();
+                ((Window) getRootPane().getParent()).dispose();
+            });
         }
     }
-
 }
 
 class NamePane extends JPanel {

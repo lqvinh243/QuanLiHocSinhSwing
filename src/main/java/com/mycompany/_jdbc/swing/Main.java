@@ -12,11 +12,9 @@ package com.mycompany._jdbc.swing;
 public class Main {
 
     public static void main(String[] args) {
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                ConnectionGui cn = new ConnectionGui();
-                cn.createAndShowGUI();
-            }
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            ConnectionGui cn = new ConnectionGui();
+            cn.createAndShowGUI();
         });
 
     }

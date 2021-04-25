@@ -11,14 +11,10 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.List;
 import javax.swing.JComboBox;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
-import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -29,14 +25,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.JViewport;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -50,10 +40,12 @@ public class StudentManagementGui implements ActionListener {
     ActionSort actSort;
     ActionForm actForm;
 
+    private boolean isUpdate = false;
+
     public StudentManagementGui() {
         JFrame frame = new JFrame("Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+
         //declare jpanel
         tStd = new TableStudent();
         frmStudent = new FormStudent();
@@ -98,6 +90,13 @@ public class StudentManagementGui implements ActionListener {
 
         actSort.cbScore.addActionListener(this);
         actSort.cbScore.setActionCommand("SortScore");
+
+        actForm.btnConfirm.addActionListener(this);
+        actForm.btnConfirm.setActionCommand("Confirm");
+
+        actForm.btnCancel.addActionListener(this);
+        actForm.btnCancel.setActionCommand("Cancel");
+
         frame.add(top, BorderLayout.NORTH);
         frame.add(frmContent, BorderLayout.CENTER);
         frame.add(actStudent, BorderLayout.EAST);
@@ -112,29 +111,26 @@ public class StudentManagementGui implements ActionListener {
         TableStudentFilter filter = actSort.filter();
         switch (str) {
             case "Add": {
-                Student std = frmStudent.getFormStudent();
-                boolean addStatus = StudentConnection.getInstance().addStudent(std);
-                if (addStatus == true) {
-                    JOptionPane.showMessageDialog(null, "Add student success!");
-                    tStd.ReloadModelTable(filter);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Add student fail!");
-                }
+                EnabledFormContent();
+                actStudent.DisableAction();
                 frmStudent.clearForm();
                 break;
             }
             case "Update": {
-                Student std = frmStudent.getFormStudent();
-                boolean updateStatus = StudentConnection.getInstance().updateStudent(std);
-                if (updateStatus == true) {
-                    JOptionPane.showMessageDialog(null, "Update student success!");
-                    tStd.ReloadModelTable(filter);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Update student fail!");
+                if (tStd.GetSelectedRow() == -1) {
+                    JOptionPane.showMessageDialog(null, "Vui long chon hoc sinh de chinh sua!!");
+                    break;
                 }
+                EnabledFormContent();
+                actStudent.DisableAction();
+                isUpdate = true;
                 break;
             }
             case "Delete":
+                if (tStd.GetSelectedRow() == -1) {
+                    JOptionPane.showMessageDialog(null, "Vui long chon hoc sinh de xoa!!");
+                    break;
+                }
                 boolean deleteStatus = StudentConnection.getInstance().deleteStudent(frmStudent.getIdStudent());
                 if (deleteStatus == true) {
                     JOptionPane.showMessageDialog(null, "Add student success!");
@@ -147,13 +143,55 @@ public class StudentManagementGui implements ActionListener {
             case "SortScore":
                 tStd.ReloadModelTable(filter);
                 break;
+            case "Confirm":
+                if (isUpdate == true) {
+                    Student std = frmStudent.getFormStudent();
+                    boolean updateStatus = StudentConnection.getInstance().updateStudent(std);
+                    if (updateStatus == true) {
+                        JOptionPane.showMessageDialog(null, "Update student success!");
+                        tStd.ReloadModelTable(filter);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Update student fail!");
+                    }
+                } else {
+                    Student std = frmStudent.getFormStudent();
+                    boolean addStatus = StudentConnection.getInstance().addStudent(std);
+                    if (addStatus == true) {
+                        JOptionPane.showMessageDialog(null, "Add student success!");
+                        tStd.ReloadModelTable(filter);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Add student fail!");
+                    }
+                    frmStudent.clearForm();
+                }
+                DisableFormContent();
+                actStudent.EnabledAction();
+                frmStudent.clearForm();
+                break;
+            case "Cancel":
+                DisableFormContent();
+                actStudent.EnabledAction();
+                frmStudent.clearForm();
+                break;
             default:
                 break;
+
         }
+        tStd.ClearSelectionTable();
+    }
+
+    public void DisableFormContent() {
+        frmStudent.DisableForm();
+        actForm.DisableAction();
+    }
+
+    public void EnabledFormContent() {
+        frmStudent.EnabledForm();
+        actForm.EnabledAction();
     }
 }
 
-class TopContent extends JPanel {
+final class TopContent extends JPanel {
 
     public TopContent(TableStudent tbl, ActionSort act) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -162,7 +200,7 @@ class TopContent extends JPanel {
     }
 }
 
-class TableStudentFilter {
+final class TableStudentFilter {
 
     SortOption sortMHS;
     SortOption sortScore;
@@ -178,7 +216,7 @@ class TableStudentFilter {
     }
 }
 
-class TableStudent extends JPanel {
+final class TableStudent extends JPanel {
 
     public JTable table;
 
@@ -258,9 +296,17 @@ class TableStudent extends JPanel {
         table.setModel(this.getModel(filter));
         this.centerContent();
     }
+
+    public int GetSelectedRow() {
+        return table.getSelectedRow();
+    }
+
+    public void ClearSelectionTable() {
+        table.clearSelection();
+    }
 }
 
-class FormContent extends JPanel {
+final class FormContent extends JPanel {
 
     public FormContent(FormStudent frm, ActionForm act) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -269,7 +315,7 @@ class FormContent extends JPanel {
     }
 }
 
-class ActionForm extends JPanel {
+final class ActionForm extends JPanel {
 
     JButton btnConfirm;
     JButton btnCancel;
@@ -280,10 +326,21 @@ class ActionForm extends JPanel {
         add(btnConfirm);
         btnCancel = new JButton("Cancel");
         add(btnCancel);
+        DisableAction();
+    }
+
+    public void DisableAction() {
+        btnConfirm.setEnabled(false);
+        btnCancel.setEnabled(false);
+    }
+
+    public void EnabledAction() {
+        btnConfirm.setEnabled(true);
+        btnCancel.setEnabled(true);
     }
 }
 
-class FormStudent extends JPanel {
+final class FormStudent extends JPanel {
 
     JTextField mhs;
     JTextField name;
@@ -347,6 +404,7 @@ class FormStudent extends JPanel {
         note = new JTextField(20);
         note.setPreferredSize(dtm);
         add(note, gbc);
+        DisableForm();
 
     }
 
@@ -403,13 +461,13 @@ class FormStudent extends JPanel {
     }
 }
 
-class ActionStudent extends JPanel {
+final class ActionStudent extends JPanel {
 
     JButton addStudent;
     JButton editStudent;
     JButton deleteStudent;
-    private int top = 3, left = 3, bottom = 3, right = 3;
-    private Insets i = new Insets(top, left, bottom, right);
+    private final int top = 3, left = 3, bottom = 3, right = 3;
+    private final Insets i = new Insets(top, left, bottom, right);
 
     public ActionStudent() {
         setLayout(new GridBagLayout());
@@ -428,22 +486,34 @@ class ActionStudent extends JPanel {
         deleteStudent = new JButton("Xoa hoc sinh");
         add(deleteStudent, gbc);
     }
+
+    public void DisableAction() {
+        addStudent.setEnabled(false);
+        editStudent.setEnabled(false);
+        deleteStudent.setEnabled(false);
+    }
+
+    public void EnabledAction() {
+        addStudent.setEnabled(true);
+        editStudent.setEnabled(true);
+        deleteStudent.setEnabled(true);
+    }
 }
 
-class ActionSort extends JPanel {
+final class ActionSort extends JPanel {
 
     JComboBox cbMHS;
     JComboBox cbScore;
 
     public ActionSort() {
-        Vector<SortOption> listSortMHS = new Vector<>();
+        var listSortMHS = new Vector<Object>();
         listSortMHS.add(new SortOption("Ma hoc sinh", SortType.NONE));
         listSortMHS.add(new SortOption("Ma hoc sinh: Tang dan", SortType.ASC));
         listSortMHS.add(new SortOption("Ma hoc sinh: Giam dan", SortType.DESC));
         cbMHS = new JComboBox(listSortMHS);
         add(cbMHS);
 
-        Vector<SortOption> listSortScore = new Vector<>();
+        var listSortScore = new Vector<SortOption>();
         listSortScore.add(new SortOption("Diem", SortType.NONE));
         listSortScore.add(new SortOption("Diem: Thap den cao", SortType.ASC));
         listSortScore.add(new SortOption("Diem: Cao den thap", SortType.DESC));
