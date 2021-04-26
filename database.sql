@@ -17,3 +17,5 @@ BEGIN
 		GhiChu VARCHAR(100),
     )
 END
+
+SET IDENTITY_INSERT HocSinh ON

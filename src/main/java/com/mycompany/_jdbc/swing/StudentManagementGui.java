@@ -15,7 +15,10 @@ import javax.swing.JComboBox;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
+import java.io.IOException;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -86,6 +89,12 @@ public class StudentManagementGui implements ActionListener {
         actStudent.deleteStudent.addActionListener(this);
         actStudent.deleteStudent.setActionCommand("Delete");
 
+        actStudent.exportExcel.addActionListener(this);
+        actStudent.exportExcel.setActionCommand("Export_Excel");
+
+        actStudent.importExcel.addActionListener(this);
+        actStudent.importExcel.setActionCommand("Import_Excel");
+
         actSort.cbMHS.addActionListener(this);
         actSort.cbMHS.setActionCommand("SortMHS");
 
@@ -139,6 +148,26 @@ public class StudentManagementGui implements ActionListener {
                 } else {
                     JOptionPane.showMessageDialog(null, "Add student fail!");
                 }
+                break;
+            case "Export_Excel":
+                var list = StudentConnection.getInstance().getAllStudent(filter.sortMHS, filter.sortScore);
+                boolean hasSuccess;
+                try {
+                    hasSuccess = new ExcelHelper().writeExcel(list, "Studen.xlsx");
+                    if (hasSuccess) {
+                        JOptionPane.showMessageDialog(null, "Write file excel success!");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Write file excel fail!");
+                    }
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(null, "Write file excel fail!");
+                }
+                break;
+            case "Import_Excel":
+                var listImport = new ExcelHelper().readExcel("Student.xlsx");
+                var bulkActionResult = StudentConnection.getInstance().importData(listImport);
+                String message = String.format("Co tong cong %d hoc sinh!Import thanh cong %d hoc sinh, that bai %d hoc sinh", bulkActionResult.getTotal(), bulkActionResult.getSuccess(), bulkActionResult.getFail());
+                JOptionPane.showMessageDialog(null, message);
                 break;
             case "SortMHS":
             case "SortScore":
@@ -467,6 +496,9 @@ final class ActionStudent extends JPanel {
     JButton addStudent;
     JButton editStudent;
     JButton deleteStudent;
+    JButton exportExcel;
+    JButton importExcel;
+
     private final int top = 3, left = 3, bottom = 3, right = 3;
     private final Insets i = new Insets(top, left, bottom, right);
 
@@ -486,6 +518,12 @@ final class ActionStudent extends JPanel {
         gbc.gridx = 0;
         deleteStudent = new JButton("Xoa hoc sinh");
         add(deleteStudent, gbc);
+        gbc.gridy++;
+        exportExcel = new JButton("Xuat Excel");
+        add(exportExcel, gbc);
+        gbc.gridx++;
+        importExcel = new JButton("Doc Excel");
+        add(importExcel, gbc);
     }
 
     public void DisableAction() {

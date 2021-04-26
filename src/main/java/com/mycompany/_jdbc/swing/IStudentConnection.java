@@ -5,6 +5,7 @@
  */
 package com.mycompany._jdbc.swing;
 
+import java.util.ArrayList;
 import java.util.Vector;
 
 /**
@@ -19,11 +20,15 @@ public interface IStudentConnection {
      * @param limit
      * @return
      */
-    Vector<Student> getAllStudent(Integer skip, Integer limit);
+    Vector<Student> getAllStudent();
 
-    Vector<Student> getAllStudent(SortOption sortMHS,SortOption sortScore);
+    Vector<Student> getAllStudent(SortOption sortMHS, SortOption sortScore);
 
     public boolean addStudent(Student std);
+
+    public boolean addStudentWithMSH(Student std);
+
+    public BulkActionResult importData(Vector<Student> std);
 
     public boolean updateStudent(Student std);
 

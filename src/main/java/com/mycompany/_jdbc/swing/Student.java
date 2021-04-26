@@ -28,9 +28,30 @@ public class Student {
     }
 
     public Student(Integer mhs, String name, Double score, String avatar, String address, String note) {
-        
-        
-        
+    }
+
+    public void setMHS(Integer mhs) {
+        this.mhs = mhs;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setScore(Double score) {
+        this.score = score;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public void PrintStudent() {

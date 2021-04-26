@@ -33,7 +33,7 @@ public class StudentConnection implements IStudentConnection {
     }
 
     @Override
-    public Vector<Student> getAllStudent(Integer skip, Integer limit) {
+    public Vector<Student> getAllStudent() {
         Vector<Student> list = new Vector<>();
         try {
             Statement st = ConnectionUtils.getConnect().createStatement();
@@ -71,7 +71,7 @@ public class StudentConnection implements IStudentConnection {
                     orderBy += " ,";
                 }
                 orderBy += " Diem " + sortScore.sortType;
-                 hasOrder = true;
+                hasOrder = true;
             }
             String strsql = "SELECT * FROM HocSinh";
             if (hasOrder == true) {
@@ -114,6 +114,53 @@ public class StudentConnection implements IStudentConnection {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean addStudentWithMSH(Student std) {
+        try {
+            Statement st = ConnectionUtils.getConnect().createStatement();
+            String sql = "SET IDENTITY_INSERT HocSinh ON;INSERT INTO HocSinh (MHS,TenHS, Diem, HinhAnh,DiaChi,GhiChu) VALUES (?,?,?,?,?,?)";
+            PreparedStatement stm = ConnectionUtils.getConnect().prepareStatement(sql);
+            stm.setInt(1, std.mhs);
+            stm.setString(2, std.name);
+            stm.setDouble(3, std.score);
+            stm.setString(4, std.avatar);
+            stm.setString(5, std.address);
+            stm.setString(6, std.note);
+
+            int iAffectedRecord = stm.executeUpdate();
+            if (iAffectedRecord <= 0) {
+                return false;
+            }
+        } catch (SQLException ex) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public BulkActionResult importData(Vector<Student> listStd) {
+        BulkActionResult bulkResult = new BulkActionResult(listStd.size());
+        for (int i = 0; i < listStd.size(); i++) {
+            try {
+                Student std = listStd.get(i);
+                boolean success = false;
+                if (std.mhs != null) {
+                    success = addStudentWithMSH(std);
+                } else {
+                    success = addStudent(std);
+                }
+                if (success == true) {
+                    bulkResult.Success();
+                } else {
+                    throw new Exception("Data cannot save");
+                }
+            } catch (Exception e) {
+                bulkResult.Fail();
+            }
+        }
+        return bulkResult;
     }
 
     @Override
