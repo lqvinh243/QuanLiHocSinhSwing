@@ -4,12 +4,6 @@
  * and open the template in the editor.
  */
 package com.mycompany._jdbc.swing;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  *
  * @author Admin

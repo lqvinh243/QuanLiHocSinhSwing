@@ -7,7 +7,9 @@ package com.mycompany._jdbc.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FileDialog;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -15,12 +17,15 @@ import javax.swing.JComboBox;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -28,6 +33,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -143,31 +150,49 @@ public class StudentManagementGui implements ActionListener {
                 }
                 boolean deleteStatus = StudentConnection.getInstance().deleteStudent(frmStudent.getIdStudent());
                 if (deleteStatus == true) {
-                    JOptionPane.showMessageDialog(null, "Add student success!");
+                    JOptionPane.showMessageDialog(null, "Xoa hoc sinh thanh cong!");
                     tStd.ReloadModelTable(filter);
                 } else {
-                    JOptionPane.showMessageDialog(null, "Add student fail!");
+                    JOptionPane.showMessageDialog(null, "Xoa hoc sinh that bai!");
                 }
                 break;
             case "Export_Excel":
+                actStudent.DisableAction();
                 var list = StudentConnection.getInstance().getAllStudent(filter.sortMHS, filter.sortScore);
                 boolean hasSuccess;
                 try {
-                    hasSuccess = new ExcelHelper().writeExcel(list, "Studen.xlsx");
+                    hasSuccess = new ExcelHelper().writeExcel(list, "Student.xlsx");
                     if (hasSuccess) {
-                        JOptionPane.showMessageDialog(null, "Write file excel success!");
+                        JOptionPane.showMessageDialog(null, "Ghi file excel thanh cong!");
                     } else {
-                        JOptionPane.showMessageDialog(null, "Write file excel fail!");
+                        JOptionPane.showMessageDialog(null, "Ghi file excel that bai!");
                     }
                 } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(null, "Write file excel fail!");
+                    JOptionPane.showMessageDialog(null, "Ghi file excel that ba!");
                 }
+                actStudent.EnabledAction();
                 break;
             case "Import_Excel":
-                var listImport = new ExcelHelper().readExcel("Student.xlsx");
+                actStudent.DisableAction();
+                JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+                var filterExt = new FileNameExtensionFilter("Excel file", "xls", "xlsx");
+                jfc.addChoosableFileFilter(filterExt);
+                jfc.setFileFilter(filterExt);
+                int returnValue = jfc.showOpenDialog(null);
+                // int returnValue = jfc.showSaveDialog(null);
+                String file = "";
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = jfc.getSelectedFile();
+                    file = selectedFile.getAbsolutePath();
+                } else {
+                    actStudent.EnabledAction();
+                    break;
+                }
+                var listImport = new ExcelHelper().readExcel(file);
                 var bulkActionResult = StudentConnection.getInstance().importData(listImport);
                 String message = String.format("Co tong cong %d hoc sinh!Import thanh cong %d hoc sinh, that bai %d hoc sinh", bulkActionResult.getTotal(), bulkActionResult.getSuccess(), bulkActionResult.getFail());
                 JOptionPane.showMessageDialog(null, message);
+                actStudent.EnabledAction();
                 break;
             case "SortMHS":
             case "SortScore":
@@ -178,19 +203,19 @@ public class StudentManagementGui implements ActionListener {
                     Student std = frmStudent.getFormStudent();
                     boolean updateStatus = StudentConnection.getInstance().updateStudent(std);
                     if (updateStatus == true) {
-                        JOptionPane.showMessageDialog(null, "Update student success!");
+                        JOptionPane.showMessageDialog(null, "Cap nhat hoc sinh thanh cong!");
                         tStd.ReloadModelTable(filter);
                     } else {
-                        JOptionPane.showMessageDialog(null, "Update student fail!");
+                        JOptionPane.showMessageDialog(null, "Cap nhat hoc sinh that bai!");
                     }
                 } else {
                     Student std = frmStudent.getFormStudent();
                     boolean addStatus = StudentConnection.getInstance().addStudent(std);
                     if (addStatus == true) {
-                        JOptionPane.showMessageDialog(null, "Add student success!");
+                        JOptionPane.showMessageDialog(null, "Them hoc sinh thanh cong!");
                         tStd.ReloadModelTable(filter);
                     } else {
-                        JOptionPane.showMessageDialog(null, "Add student fail!");
+                        JOptionPane.showMessageDialog(null, "Them hoc sinh that bai!");
                     }
                     frmStudent.clearForm();
                 }
@@ -530,12 +555,16 @@ final class ActionStudent extends JPanel {
         addStudent.setEnabled(false);
         editStudent.setEnabled(false);
         deleteStudent.setEnabled(false);
+        importExcel.setEnabled(false);
+        exportExcel.setEnabled(false);
     }
 
     public void EnabledAction() {
         addStudent.setEnabled(true);
         editStudent.setEnabled(true);
         deleteStudent.setEnabled(true);
+        importExcel.setEnabled(true);
+        exportExcel.setEnabled(true);
     }
 }
 

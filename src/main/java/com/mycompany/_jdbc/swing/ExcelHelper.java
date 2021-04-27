@@ -44,7 +44,7 @@ public class ExcelHelper {
             workbook = getWorkbook(excelFilePath);
 
             // Create sheet
-            Sheet sheet = workbook.createSheet("Books"); // Create sheet with sheet name
+            Sheet sheet = workbook.createSheet("Student"); // Create sheet with sheet name
 
             int rowIndex = 0;
 
